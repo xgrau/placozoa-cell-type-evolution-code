@@ -71,6 +71,8 @@ head(ctt)
 # 5	lipophil	khaki2	lipophil	5
 ```
 
+If you have any queries, feel free to let me know in the [Issues section](https://github.com/xgrau/placozoa-cell-type-evolution/issues).
+
 Enjoy!
 
 ```python

@@ -1,6 +1,6 @@
 # Phylogenomics of placozoans
 
-Summary:
+Summary of the steps:
 
 1. Broccoli for OG identification.
 2. Select orthogroups as candidate markers, using completeness and clustering coefficient statistics from [***Broccoli***](https://academic.oup.com/mbe/article/37/11/3389/5865275).
@@ -9,7 +9,7 @@ Summary:
 5. Select **high-information content gene markers** with [`MARE`](https://p4.nhm.ac.uk/tutorial/tut_compo.html) tree-likeness scores.
 6. Apply amino-acid recoding schemes (SR4, SR6, Dayhoff6).
 
-## Identification of gene markers
+## Steps
 
 Guide to prepare the Metazoa-only (codenamed `meto`) and Metazoa+Choanoflagellata (`metc` datasets):
 

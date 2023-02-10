@@ -21,45 +21,57 @@ You can browse the results from our analyses in [this ShinyApp](https://sebelab.
 
 ## Access the data
 
-We provide the following [raw data](results_scatlas/data/scdb) for each species (indicated with the acronyms `Tadh`, `TrH2`, `Hhon` and `HoiH23`, for *Trichoplax adhaerens* H1, *Trichoplax* sp. H2, *Hoilungia hongkongensis* H13, and *Cladtertia collaboinventa* H23, respectively):
+We provide the following [raw data](results_scatlas/data/scdb) for each species:
 
-* **UMI matrices**, which are files starting with the **`mat` prefix**. For all analyses, we used matrices indicated with the `it2` suffix (previous iterations correspond to intermediate steps). These are sparse matrices stored as R objects, specifically [metacell package](https://tanaylab.github.io/metacell/)-type `mat` objects. See below for an example of how to load these matrices into R.
-* **Cell-metacell assignment files** indicated with the **`mc` prefix**. For all analyses, we used matrices indicated with the `it4` suffix (previous iterations correspond to intermediate steps). 
-* **Two-dimensional porjection** objects indicated in the **`mc2d` prefix**. 
-* Other objects used by metacell such as gene statistics, gene sets, cell coclustering data... Please refer to the appropriate scripts in the [`results_scatlas`](results_scatlas/`) folder for details.
+* **UMI matrices**, which are the files starting with the **`mat` prefix**. For all analyses, we used matrices indicated with the `it2` suffix (previous iterations correspond to intermediate steps). These are sparse matrices stored as R objects, specifically [metacell package](https://tanaylab.github.io/metacell/)-type `mat` objects. See below for an example of how to load these matrices into R.
+* **Cell-metacell assignment files** indicated with the **`mc` prefix**. For all analyses, we used matrices indicated with the `it4` suffix (previous iterations correspond to intermediate steps).
+* **Two-dimensional porjection** objects indicated in the **`mc2d` prefix**.
+* Other objects used by metacell such as gene statistics, gene sets, cell coclustering data... Please refer to the appropriate scripts in the relevant [readme file](results_scatlas/README.md`) for details.
 
-UMI matrices in the metacell `mat` format can be read into R as follows:
+Each species is referred to with a short acronym, all through this project:
 
-```R
-# from the `scdb` folder
-# load metacell library
-library("metacell")
-# initialise metacell db
-metacell::scdb_init(".", force_reinit = TRUE)
-# read object, using its ID to refer to it (in this case, the `scdr_Tadh_it2` bit); there ara analogous files
-mat = metacell::scdb_mat("scdr_Tadh_it2")
-# sparse matrix available in the mat@mat slot
-dim(mat@mat)
-```
+* `Tadh` for *Trichoplax adhaerens* H1
+* `TrH2` for *Trichoplax* sp. H2
+* `Hhon` for *Hoilungia hongkongensis* H13
+* `HoiH23` for *Cladtertia collaboinventa* H23 (we came up with the label before it was [recently renamed](https://www.frontiersin.org/articles/10.3389/fevo.2022.1016357/full) from a species in the *Hoilungia* genus to a genus of its own, apologies for the confusion).
+
+We also provide **metacell-cell type assignment tables**, with our cell type annotations for each metacell. The final annotations are stored in this folder: [`results_scatlas/results_metacell_it4/`](results_scatlas/results_metacell_it4/), e.g. [this file](results_scatlas/results_metacell_it4/annotation_mc.Tadh.it4.reordered.tsv).
 
 The [metacell package]([url](https://tanaylab.github.io/metacell/)) contains analogous functions to load other `metacell`-formatted data files, such as cell clusterings in `mc` objects (which specify which cells in the UMI matrix belong to each metacell cluster).
 
-We also provide **metacell-cell type assignment tables**, with our cell type annotations for each metacell. The final annotations are stored here [`results_scatlas/results_metacell_it4/`](results_scatlas/results_metacell_it4/), and look like this:
+How to load metacell objects in R:
 
-```bash
-head annotation_mc.Tadh.it4.reordered.tsv
+```R
+# from the `results_scatlas/` folder in this repository
+# load metacell library
+library("metacell")
+# initialise metacell database using its relative path:
+metacell::scdb_init("data/scdb/", force_reinit = TRUE)
+
+# read the mat object using its ID to refer to it (in this case, the `scdr_Tadh_it2` bit); there ara analogous files for metacells, etc
+mat = metacell::scdb_mat("scdr_Tadh_it2")
+# sparse matrix available in the mat@mat slot, in this case it contains 16386 genes x 13236 cells
+dim(mat@mat)
+
+# likewise, you may want to load a mc object containing cell-to-metacell assignments
+mc = metacell::scdb_mc("scdr_Tadh_it4")
+# the mc@mc slot is a vector with all cells and their associated metacell
+length(mc@mc)
+# notice that this vector contains only 13151 cells: not all cells in the mat@mat matrix are classified into a metacell
+
+# if you want to know which cell type is annotated to each metacell, check the mc annotation file
+# make sure that you load the same version of the metacell clustering as in the mc object, in this case, it4
+ctt = read.table("results_metacell_it4/annotation_mc.Tadh.it4.reordered.tsv", header = TRUE)
+head(ctt)
 # metacell	cell_type	color	broad_cell_type	metacell_it2
 # 1	lipophil	khaki2	lipophil	1
 # 2	lipophil	khaki2	lipophil	2
 # 3	lipophil	khaki2	lipophil	3
 # 4	lipophil	khaki2	lipophil	4
 # 5	lipophil	khaki2	lipophil	5
-# 6	lipophil	khaki2	lipophil	6
-# 7	lipophil	khaki2	lipophil	7
-# 8	lipophil	khaki2	lipophil	8
-# 9	lipophil	khaki2	lipophil	9
 ```
 
+Enjoy!
 
 ```python
 

@@ -24,7 +24,7 @@ You can browse the results from our analyses in [this ShinyApp](https://sebelab.
 We provide the following [raw data](results_scatlas/data/scdb) for each species:
 
 * **UMI matrices**, which are the files starting with the **`mat` prefix**. For all analyses, we used matrices indicated with the `it2` suffix (previous iterations correspond to intermediate steps). These are sparse matrices stored as R objects, specifically [metacell package](https://tanaylab.github.io/metacell/)-type `mat` objects. See below for an example of how to load these matrices into R.
-* **Cell-metacell assignment files** indicated with the **`mc` prefix**. For all analyses, we used matrices indicated with the `it4` suffix (previous iterations correspond to intermediate steps).
+* **Cell-metacell assignment files** indicated with the **`mc` prefix**. For all analyses, we used matrices indicated with the `it4` suffix (previous iterations correspond to intermediate analysis steps).
 * **Two-dimensional porjection** objects indicated in the **`mc2d` prefix**.
 * Other objects used by metacell such as gene statistics, gene sets, cell coclustering data... Please refer to the appropriate scripts in the relevant [readme file](results_scatlas/README.md`) for details.
 
@@ -37,7 +37,7 @@ Each species is referred to with a short acronym, all through this project:
 
 We also provide **metacell-cell type assignment tables**, with our cell type annotations for each metacell. The final annotations are stored in this folder: [`results_scatlas/results_metacell_it4/`](results_scatlas/results_metacell_it4/), e.g. [this file](results_scatlas/results_metacell_it4/annotation_mc.Tadh.it4.reordered.tsv).
 
-The [metacell package]([url](https://tanaylab.github.io/metacell/)) contains analogous functions to load other `metacell`-formatted data files, such as cell clusterings in `mc` objects (which specify which cells in the UMI matrix belong to each metacell cluster).
+The [metacell package]([url](https://tanaylab.github.io/metacell/)) contains functions to load `metacell`-formatted data files, such as cell clusterings in `mc` objects (which specify which cells in the UMI matrix belong to each metacell cluster).
 
 How to load metacell objects in R:
 

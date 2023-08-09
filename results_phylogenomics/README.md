@@ -1,5 +1,7 @@
 # Phylogenomics of placozoans
 
+## Supermatrix generation and phylogentic analysis
+
 Summary of the steps:
 
 1. Broccoli for OG identification.
@@ -9,7 +11,7 @@ Summary of the steps:
 5. Select **high-information content gene markers** with [`MARE`](https://p4.nhm.ac.uk/tutorial/tut_compo.html) tree-likeness scores.
 6. Apply amino-acid recoding schemes (SR4, SR6, Dayhoff6).
 
-## Steps
+### Steps
 
 Guide to prepare the Metazoa-only (codenamed `meto`) and Metazoa+Choanoflagellata (`metc` datasets):
 
@@ -211,4 +213,94 @@ bpcomp -x ${burnin} <chain 1> <chain 2>
 ```bash
 mkdir -p results_trees
 Rscript s04_paint_trees.R
+```
+
+## Supertree approach with with ASTRAL
+
+1. Use Astral (5.7.8) to build species tree from single-gene-per-species gene trees:
+
+```bash
+# clean concatenation of gene trees
+cat results_broccoli_metc/alignments/OG_*treefile | sed "s/_[^:]*:/:/g" > results_broccoli_metc/trees_filtered.astral.metc.concat.all.newick
+cat results_broccoli_meto/alignments/OG_*treefile | sed "s/_[^:]*:/:/g" > results_broccoli_meto/trees_filtered.astral.meto.concat.all.newick
+```
+
+2. Use [weighted Astral in hybrid mode](https://academic.oup.com/mbe/article/39/12/msac215/6750035) (1.15.2.3) to build species tree from single-gene-per-species gene trees:
+
+```bash
+# run Astral in hybrid weighted mode 
+astral-hybrid -t 20 -R -u 2 -i results_broccoli_metc/trees_filtered.astral.metc.concat.all.newick -o results_broccoli_metc/trees_filtered.astral.metc.hybrid_output.all.newick
+astral-hybrid -t 20 -R -u 2 -i results_broccoli_meto/trees_filtered.astral.meto.concat.all.newick -o results_broccoli_meto/trees_filtered.astral.meto.hybrid_output.all.newick
+
+3. Use [paralog-aware Astral](https://academic.oup.com/mbe/article/37/11/3292/5850411?login=true) (1.15.1.3) to build the species tree with paralog-ridden gene trees:
+
+```bash
+# concatenation of gene trees
+ls results_broccoli_metc/alignments/OG_*treefile | sed "s/alignments/alignments_prefiltering/" | xargs cat > results_broccoli_metc/trees_prefiltered.astral.metc.concat.all.newick
+ls results_broccoli_meto/alignments/OG_*treefile | sed "s/alignments/alignments_prefiltering/" | xargs cat > results_broccoli_meto/trees_prefiltered.astral.meto.concat.all.newick
+
+# create gene to species mapping files
+paste <(cat results_broccoli_metc/trees_prefiltered.astral.metc.concat.all.newick | tr ',' '\n' | tr -d '()' | sed "s/:.*//") <(cat results_broccoli_metc/trees_prefiltered.astral.metc.concat.all.newick | tr ',' '\n' | tr -d '()' | sed "s/:.*//" | cut -f1 -d '_') > results_broccoli_metc/trees_prefiltered.astral.metc.concat.all.mapping.csv
+paste <(cat results_broccoli_meto/trees_prefiltered.astral.meto.concat.all.newick | tr ',' '\n' | tr -d '()' | sed "s/:.*//") <(cat results_broccoli_meto/trees_prefiltered.astral.meto.concat.all.newick | tr ',' '\n' | tr -d '()' | sed "s/:.*//" | cut -f1 -d '_') > results_broccoli_meto/trees_prefiltered.astral.meto.concat.all.mapping.csv
+
+# run astral in paralog-aware mode
+astral-pro -R -t 20 -u 2 -a results_broccoli_metc/trees_prefiltered.astral.metc.concat.all.mapping.csv -i results_broccoli_metc/trees_prefiltered.astral.metc.concat.all.newick -o results_broccoli_metc/trees_prefiltered.astral.metc.pro_output.newick
+astral-pro -R -t 20 -u 2 -a results_broccoli_meto/trees_prefiltered.astral.meto.concat.all.mapping.csv -i results_broccoli_meto/trees_prefiltered.astral.meto.concat.all.newick -o results_broccoli_meto/trees_prefiltered.astral.meto.pro_output.newick
+```
+
+## Macrosynteny blocks
+
+1. Align proteins all-to-all, all species of interest:
+
+```bash
+# blast all species
+mkdir -p results_macrosynteny_all/alignments
+mkdir -p results_macrosynteny_all/bins
+while read i ; do 
+while read j ; do 
+  if [ $i != $j -a ! -f results_macrosynteny_all/alignments/dmd.${i}-${j}.csv ] ; then 
+    echo $i $j
+    diamond blastp -d ../data/reference/${j}_long.pep.fasta -q ../data/reference/${i}_long.pep.fasta -o results_macrosynteny_all/alignments/dmd.${i}-${j}.csv --evalue 1e-9 --more-sensitive --max-target-seqs 10
+  fi
+done < data/species_list_synteny_blocks.long.txt
+done < data/species_list_synteny_blocks.long.txt
+```
+
+3. Get clusters:
+
+```bash
+# with MCL
+while read i ; do 
+  while read j ; do 
+    if [ $i != $j ] ; then 
+      awk '{print $1,$2 }' results_macrosynteny_all/alignments/dmd.${i}-${j}.csv 
+    fi
+  done < data/species_list_synteny_blocks.long.txt
+done < data/species_list_synteny_blocks.long.txt > results_macrosynteny_all/mcl.all.abc.csv
+mcl results_macrosynteny_all/mcl.all.abc.csv --abc -I 2.1 -o results_macrosynteny_all/mcl.all.out.csv
+awk '{ { for(i = 1; i <= NF; i++) { printf("HG%06d\t%s\n", NR,$i) } } }' results_macrosynteny_all/mcl.all.out.csv > results_macrosynteny_all/mcl.all.out.txt
+```
+
+3. Match orthologroups to running windows of genes along each chromosome:
+
+```bash
+Rscript s60_define_regions_2022-05-30-whole.R
+```
+
+4. Define ancestral linkage groups based on homology to three reference species:
+
+```bash
+Rscript s61_find_ALG_2022-06-03.R
+```
+
+5. Score ancestral linkage groups in each species:
+
+```bash
+Rscript s62_score_ALG_2022-06-03.R
+```
+
+6. Match new ALGs with Simakov 2022 based on overlaps with *Ephydatia* (only species in the dataset for which there's clear gene IDs).
+
+```bash
+Rscript s64_match_Emue_to_Simakov22.R
 ```

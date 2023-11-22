@@ -1,6 +1,6 @@
 # Cell type evolution and diversity in placozoans  <!-- omit from toc -->
 
-This repository contains all necessary scripts to reproduce the single-cell atlases of the placozoans *Trichoplax adhaerens* (H1), *Trichoplax* sp. (H2), *Hoilungia hongkongensis* (H13), and *Cladtertia collaboinventa* (H23), presented in our manuscript [here](https://github.com/xgrau/placozoa-cell-type-evol-code).
+This repository contains all necessary scripts to reproduce the single-cell atlases of the placozoans *Trichoplax adhaerens* (H1), *Trichoplax* sp. (H2), *Hoilungia hongkongensis* (H13), and *Cladtertia collaboinventa* (H23), presented in [Najle et al., 2023 (Cell)](https://www.cell.com/cell/fulltext/S0092-8674(23)00917-0).
 
 ![placozoan tree of life](data/fig_tree.png)
 

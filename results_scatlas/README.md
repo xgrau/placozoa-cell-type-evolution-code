@@ -250,4 +250,4 @@ Rscript s21_postscatlas_peptidergic_it4_2022-01-25.R
 
 We generated four additional scRNA-seq datasets for H2 to test the effects of Notch signalling inhibition: specimens treated with chemical Notch antagonists (DAPT and LY411575), one agonist (Yhhu-3792), and one control (untreated). 
 
-The relevant metacell objects (raw UMIs, metacell clusters, 2D projection...) are stored in the `data/scdb/` folder under the `drugs_TrH2_it1` ID. Cell type annotations for each metacell ara available [here](results_scatlas/results_metacell_it1_drugs/annotation_mc.TrH2.it1.tsv).
+The relevant metacell objects (raw UMIs, metacell clusters, 2D projection...) are stored in the `data/scdb/` folder under the `drugs_TrH2_it1` ID. Cell type annotations for each metacell ara available [here](results_metacell_it1_drugs/annotation_mc.TrH2.it1.tsv).

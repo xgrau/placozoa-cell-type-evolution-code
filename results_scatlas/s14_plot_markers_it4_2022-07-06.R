@@ -1,8 +1,6 @@
 # libraries
 library("metacell")
 library("scales")
-source("../scripts/Downstream_functions.R")
-source("../scripts/Modified_functions.R")
 source("../scripts/helper.R")
 par(family  = "Arial")
 

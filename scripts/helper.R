@@ -847,6 +847,110 @@ scp_plot_sc_2d_gene_exp = function(
 }
 
 
+#' Plot single cell/metacell 2D projection
+#'
+#' @param mc2d 2D projection from `mc2d` object
+#' @param mc loaded metacell object (`gMCCov` class)
+#' @param mc_colors optional named vector of metacell colors; if `NULL` (default), `mc@colors` are used
+#' @param cell_colors optional named vector of individual cell colors; if `NULL` (default), metacell color is used
+#' @param output_file path to file to which the plot will be saved; if `NULL` (default), the plot is returned to stdout
+#' @param height,width,res numeric, the width,  height and resolution of plot to be saved (in pixels if png, in inches if pdf)
+#' 
+#' @return data.frame with metacells' cell_type annotations. Also saves the plot to disk.
+#'
+scp_plot_sc_2d = function(
+	mc2d,
+	mc,
+	mc_colors=NULL,
+	cell_colors=NULL,
+	plot_edges=FALSE,
+	plot_mcs=FALSE,
+	plot_mc_name=FALSE,
+	width=12,
+	height=12,
+	res=NA,
+	output_file=NULL,
+	cex_mc=3,
+	cex_sc=0.75,
+	alpha_mc=0.8,
+	alpha_sc=0.4,
+	do_axes=FALSE) {
+	
+	# get colors of metacells
+	if (is.null(mc_colors)) mc_colors = mc@colors
+	if (is.null(names(mc_colors))) names(mc_colors) <- colnames(mc@mc_fp)
+	# get colors of individual cells
+	if (is.null(cell_colors)) cell_colors = mc_colors[ as.character(mc@mc[names(mc2d@sc_x)]) ]
+	
+	# plot
+	plotting_function(output_file, width, height, res, EXP = {
+		
+		# determine plot max/min
+		if (plot_mcs) {
+			
+			xlim=c(min(mc2d@sc_x, mc2d@mc_x, na.rm = TRUE), max(mc2d@sc_x, mc2d@mc_x, na.rm = TRUE))
+			ylim=c(min(mc2d@sc_y, mc2d@mc_y, na.rm = TRUE), max(mc2d@sc_y, mc2d@mc_y, na.rm = TRUE))
+			
+		} else {
+			
+			xlim=c(min(mc2d@sc_x, na.rm = TRUE), max(mc2d@sc_x, na.rm = TRUE))
+			ylim=c(min(mc2d@sc_y, na.rm = TRUE), max(mc2d@sc_y, na.rm = TRUE))
+			
+		}
+		
+		# plot individual cells
+		plot(
+			mc2d@sc_x,
+			mc2d@sc_y,
+			pch = 19,lwd = 0,
+			cex = cex_sc,
+			col = alpha(cell_colors,alpha_sc),
+			xlim = xlim,
+			ylim = ylim,
+			xlab = NA, ylab = NA, axes=do_axes
+		)
+		
+		# plot edges between metacells?
+		if (plot_edges) {
+			fr = as.character(mc2d@graph$mc1)
+			to = as.character(mc2d@graph$mc2)
+			segments(
+				x0=mc2d@mc_x[fr],
+				y0=mc2d@mc_y[fr],
+				x1=mc2d@mc_x[to],
+				y1=mc2d@mc_y[to],
+				col="gray70")
+		}
+		
+		# plot metacells?
+		if (plot_mcs) {
+			points(
+				mc2d@mc_x,
+				mc2d@mc_y,
+				pch=19,lwd=0.5,
+				cex=cex_mc,
+				col=alpha(mc_colors,alpha_mc))
+		}
+		
+		# plot metacell ids?
+		if (plot_mc_name) {
+			text(
+				mc2d@mc_x,
+				mc2d@mc_y,
+				#cex=cex_mc,
+				labels=names(mc2d@mc_x))
+		}
+		title(
+			sub = sprintf(
+				"2D projection\nn = %i cells | n = %i metacells", 
+				length(mc2d@sc_x),
+				length(mc2d@mc_x)
+			)
+		)
+		
+	})
+}
+
 #' Prepare heatmap of gene expression: select marker genes & create annotations
 #'
 #' Prepares heatmap of gene expression fold change for metacells and single cells

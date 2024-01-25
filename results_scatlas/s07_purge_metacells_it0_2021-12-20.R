@@ -1,6 +1,5 @@
 # libraries
 library("metacell")
-source("../scripts/Downstream_functions.R")
 source("../scripts/helper.R")
 par(family  = "Arial")
 

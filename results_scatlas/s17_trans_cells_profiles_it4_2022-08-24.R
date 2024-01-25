@@ -1,7 +1,6 @@
 # libraries
 library("scales")
 library("metacell")
-source("../scripts/Downstream_functions.R")
 source("../scripts/helper.R")
 source("../scripts/geneSetAnalysis.R")
 graphics.off()

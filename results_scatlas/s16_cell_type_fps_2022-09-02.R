@@ -1,7 +1,7 @@
 # libraries
 library("scales")
 library("metacell")
-source("../scripts/Downstream_functions.R")
+source("../scripts/helper.R")
 
 # files
 out_fn = "results_metacell_it4"

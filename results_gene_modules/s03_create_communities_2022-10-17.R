@@ -3,7 +3,6 @@ library("alluvial")
 library("igraph")
 suppressMessages(source("../scripts/helper.R"))
 suppressMessages(source("../scripts/geneSetAnalysis.R"))
-suppressMessages(source("../scripts/Cross_species_functions.R"))
 
 # paths to input data
 inp_fn = "results_gmod_it4/"

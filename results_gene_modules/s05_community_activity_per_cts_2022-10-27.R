@@ -2,8 +2,6 @@
 
 # libraries
 source("../scripts/helper.R")
-source("../scripts/Downstream_functions.R")
-
 
 # paths to input data
 inp_fn = "results_gmod_it4/"

@@ -3925,3 +3925,30 @@ gmod_annotate_modules_to_mc_and_ct = function(me, ct_vector = NULL, clean_module
 	return(module_annots)
 	
 }
+
+#' Jaccard distance between columns of two binary matrices
+#' @param M1,M2 binary matrix
+jaccard <- function(M1, M2) {
+	# make matrices conformable
+	missing_in_M2 <- setdiff(rownames(M1), rownames(M2))
+	missing_in_M1 <- setdiff(rownames(M2), rownames(M1))
+	add_M2 <- matrix(0, nrow = length(missing_in_M2), ncol = ncol(M2))
+	add_M1 <- matrix(0, nrow = length(missing_in_M1), ncol = ncol(M1))
+	rownames(add_M2) <- missing_in_M2
+	rownames(add_M1) <- missing_in_M1
+	M1 <- data.matrix(rbind(M1, add_M1))
+	M2 <- data.matrix(rbind(M2, add_M2))
+	# intersect: matrix multiplication t(M1) x M2
+	intersectM <- t(M1) %*% M2
+	# union: sum by rows and columns
+	unionM <- matrix(nrow = ncol(M1), ncol = ncol(M2))
+	for (i in 1:ncol(M1)) {
+		unionM[i,] <- colSums((M1[,i] + M2) > 0)
+	}
+	# jaccard
+	outM <- intersectM / unionM
+	outM[is.na(outM)] <- 0
+	rownames(outM) <- colnames(M1)
+	colnames(outM) <- colnames(M2)
+	outM
+}

@@ -3,8 +3,6 @@
 # libraries
 library("metacell")
 library("scales")
-source("../scripts/Gene_module_functions.R")
-source("../scripts/Downstream_functions.R")
 source("../scripts/helper.R")
 
 ## Placozoans ##

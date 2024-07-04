@@ -3952,3 +3952,43 @@ jaccard <- function(M1, M2) {
 	colnames(outM) <- colnames(M2)
 	outM
 }
+
+#' Convenience function to import kallisto outputs as metacell count objects
+#' 
+#' @param mat_nm name of the new metacell matrix object (will be saved to the initialised scdb)
+#' @param matrix_fn path to kallisto sparse expression matrix (typically .mtx format)
+#' @param genes_fn path to list of gene names (used as colnames)
+#' @param cells_fn path to a list of cell barcodes/names (used as rownames)
+#' 
+mcell_import_scmat_kallisto = function(mat_nm, matrix_fn, genes_fn, cells_fn, transpose = FALSE, header_cells = FALSE, header_genes = FALSE) {
+  
+  require("Matrix")
+  require("metacell")
+  
+  # timestamp
+  stamp = runif(1, min = 1e6, max = 9e6)
+  
+  # load sparse matrix
+  mat = Matrix::readMM(file = matrix_fn)
+  if (transpose) {
+    mat = t(mat)
+  }
+  colnames(mat) = read.table(cells_fn, header = header_cells)[,1]
+  rownames(mat) = read.table(genes_fn, header = header_genes)[,1]
+  
+  # temporary matrix
+  # write.table(mat, file = sprintf("tmp.%s", stamp), sep ="\t", row.names = TRUE, col.names = TRUE, quote = FALSE)
+  saveRDS(mat, sprintf("tmp.%s.RDS", stamp))
+  
+  # load as metacell object
+  # metacell::mcell_import_scmat_tsv(
+  #   mat_nm = mat_nm,
+  #   dset_nm = mat_nm,
+  #   fn = sprintf("tmp.%s", stamp))
+  mcell_import_scmat_10x_custom(mat_nm, sprintf("tmp.%s.RDS", stamp))
+  
+  # remove temporary matrix
+  # file.remove(sprintf("tmp.%s", stamp))
+  file.remove(sprintf("tmp.%s.RDS", stamp))
+  
+}

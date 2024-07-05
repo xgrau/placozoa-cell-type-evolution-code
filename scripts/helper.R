@@ -3992,3 +3992,31 @@ mcell_import_scmat_kallisto = function(mat_nm, matrix_fn, genes_fn, cells_fn, tr
   file.remove(sprintf("tmp.%s.RDS", stamp))
   
 }
+
+			   
+#' Gene UMI count in metacell (object-independent)
+#'
+#' @param mat_object single expression matrix (e.g. mat@mat)
+#' @param T_totumi integer, filter out genes with less than `T_totumi` counts
+#' @param grouping_vector a vector with grouping categories for individual cells (same format and length as `mc@mc`).
+#' @param cells_vector vector of cell names i, to include in counts (defaults to `colnames(mat)`; same length as `grouping_vector`).
+#'
+#' @return matrix of gene UMI counts in metacells
+#'
+sca_mc_gene_counts_noobj = function(mat, grouping_vector, T_totumi = 0, cells_vector = colnames(mat)) {
+	
+	# get UMIs
+	keep_genes_bool = rowSums(mat) > T_totumi
+	keep_genes = names(which(keep_genes_bool))
+	
+	# counts per metacell or grouping vector
+	if ("factor" %in% class(grouping_vector)) {
+		grouping_vector_order = levels(grouping_vector)
+	} else {
+		grouping_vector_order = unique(grouping_vector)
+	}
+	niche_counts = .row_stats_by_factor( mat[ keep_genes, cells_vector ], grouping_vector, rowSums )
+	niche_counts = niche_counts[ , grouping_vector_order ]
+	return(niche_counts)
+	
+}

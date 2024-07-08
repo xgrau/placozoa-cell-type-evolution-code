@@ -4020,3 +4020,111 @@ sca_mc_gene_counts_noobj = function(mat, grouping_vector, T_totumi = 0, cells_ve
 	return(niche_counts)
 	
 }
+
+#' Metacell-level identification of batch-correlated genes
+#'
+#' @param mc_object `mc` object with expression data (`mat@mc_fp`)
+#' @param mat_object `mat` object with batch information 
+#' @param cor_thr_q quantile of top correlation values to use as a threshold (default = 0.99, ie top 1% of genes are excluded)
+#' @param cor_thr correlation value to use as a threshold (default is NULL, ie use the quantile `cor_thr_q` value instead)
+#' @param method correlation method (from `cor()`, default is "pearson")
+#' @param batch_field character, name of the column in `mat_object@cell_metadata` containing batch information (default is "batch_set_id"), or a custom vector (must match cell order in `mat`!)
+#' 
+#' @return list with two elements: `genes` correlated with batch distribution, and  `cor`, a correlation matrix
+#'
+sca_batch_correlated_genes_mc = function(
+	mc_object, mat_object, 
+	cor_thr_q = 0.999, 
+	cor_thr_p = NULL,
+	cor_thr = NULL, 
+	method = "pearson",
+	batch_field = "batch_set_id",
+	do_plots = FALSE,
+	output_file = NULL, width = 4, height = 4, res = NA
+	) {
+	
+	# get batch frequencies per metacell
+	if (length(batch_field) == 1) {
+		mc_t = t(table(mc_object@mc, mat_object@cell_metadata [ names(mc_object@mc) , batch_field]))
+	} else if (length(batch_field) == length(mc_object@mc)) {
+		mc_t = t(table(mc_object@mc, batch_field))
+	} else {
+		stop("`batch_field` should either be a column in `mat@cell_metadata` or a vector with cell-level batch information, matching `mc@mc`")
+	}
+	# keep metacell order from mc object
+	mc_t = mc_t [ , colnames(mc_object@mc_fp) ]
+	mc_f = t(t(mc_t) / colSums(mc_t))
+
+	# expression and batch data per cell
+	mc_e = as.matrix(mc_object@mc_fp)
+	
+	# correlation
+	gen_bat_cor = t(apply(mc_e, 1, function(g) cor(g, t(mc_f), method = method) ))
+	colnames(gen_bat_cor) = rownames(mc_f)
+
+	# max values per gene
+	gen_bat_cor_max = apply(abs(gen_bat_cor), 1, max)
+	
+	# find genes
+	if (!is.null(cor_thr)) {
+		gen_bat_ids = names(which(gen_bat_cor_max >= cor_thr))
+		message(sprintf("Batch-correlated genes | n = %i | %s cor >= %.3f | quantile = [given]", length(gen_bat_ids), method, cor_thr ))
+	} else if (!is.null(cor_thr_p)) {
+		gen_bat_cor_max_p = as.vector(pnorm(scale(gen_bat_cor_max)))
+		names(gen_bat_cor_max_p) = names(gen_bat_cor_max)
+		cor_thr = min(gen_bat_cor_max [ gen_bat_cor_max_p >= cor_thr_p ])
+		gen_bat_ids = names(which(gen_bat_cor_max >= cor_thr))
+		message(sprintf("Batch-correlated genes | n = %i | %s cor >= %.3f | probability = %.3f", length(gen_bat_ids), method, cor_thr, cor_thr_p ))
+	} else {
+		cor_thr = quantile(gen_bat_cor_max, cor_thr_q, na.rm = TRUE)
+		gen_bat_ids = names(which(gen_bat_cor_max >= cor_thr))
+		message(sprintf("Batch-correlated genes | n = %i | %s cor >= %.3f | quantile = %.3f", length(gen_bat_ids), method, cor_thr, cor_thr_q ))
+	}
+	
+	
+	# diagnostic plots
+	if (do_plots) {
+		plotting_function(output_file, width, height, res, EXP = {
+			
+			par(mfrow = c(2,2))
+			# histogram
+			hist(
+				gen_bat_cor, breaks = 60, xlab = method,
+				main = "distribution of fp ~ batch correlation values",
+				border = NA, xlim = c(-1,1))
+			
+			# max correlation per gene
+			plot(
+				sort(gen_bat_cor_max), col = "blue", cex = 0.5,
+				ylab = "Max correlation per gene",
+				sub = sprintf("thr = %.3f | n = %i genes", cor_thr, length(gen_bat_ids)),
+				main = "Max correlation per gene"
+			)
+			abline(h=cor_thr, lty = 2)
+			
+			# pairwise scatterplots
+			for (i in 1:ncol(gen_bat_cor)) {
+				for (j in 1:ncol(gen_bat_cor)) {
+					if (i < j) {
+						p_cor = cor(gen_bat_cor[,i], gen_bat_cor[,j], method = method)
+						plot(
+							gen_bat_cor[,i], gen_bat_cor[,j], 
+							xlab = colnames(gen_bat_cor)[i],
+							ylab = colnames(gen_bat_cor)[j], 
+							cex = 0.5, col = alpha("blue",0.6),
+							xlim = c(-1,1), ylim = c(-1,1),
+							main = sprintf("Per-gene batch correlation in batch pairs\n%s (%i) ~ %s (%i)", colnames(gen_bat_cor)[i], i, colnames(gen_bat_cor)[j], j),
+							sub = sprintf("%s = %.3f", method, p_cor),
+							cex.main = 0.9)
+					}
+				}
+			}
+		})
+	} 
+	# end diagnostic plots
+	
+	# return	
+	return(list(genes = gen_bat_ids, cor = gen_bat_cor))
+	
+}
+
